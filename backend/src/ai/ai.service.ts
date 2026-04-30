@@ -45,7 +45,22 @@ ${text}
 `.trim();
 
     const output = await this.requestStructuredOutput(model, prompt);
-    return this.parseAndValidateResponse(output);
+    const parsed = this.parseAndValidateResponse(output);
+
+    if (!this.requiresActionItemRefinement(parsed.actionItems)) {
+      return parsed;
+    }
+
+    const refinedActionItems = await this.refineActionItems(
+      model,
+      text,
+      parsed.actionItems,
+    );
+
+    return {
+      summary: parsed.summary,
+      actionItems: refinedActionItems,
+    };
   }
 
   private async requestStructuredOutput(
@@ -122,5 +137,64 @@ ${text}
       summary: summary.trim(),
       actionItems: actionItems.map((item) => item.trim()),
     };
+  }
+
+  private requiresActionItemRefinement(actionItems: string[]): boolean {
+    return actionItems.some((item) => {
+      const words = item.split(/\s+/).filter(Boolean).length;
+      return words > 18 || item.includes(', and ') || item.includes(' and ');
+    });
+  }
+
+  private async refineActionItems(
+    model: string,
+    sourceText: string,
+    actionItems: string[],
+  ): Promise<string[]> {
+    const refinementPrompt = `
+Rewrite these action items so each item is one focused task.
+Return ONLY JSON with this exact shape:
+{
+  "actionItems": ["item 1", "item 2", "item 3"]
+}
+
+Rules:
+- Keep exactly 3 items.
+- Preserve the original intent.
+- Each item should be concise and action-oriented.
+- Avoid multi-task chaining with "and".
+
+Source text:
+${sourceText}
+
+Current action items:
+${JSON.stringify(actionItems)}
+`.trim();
+
+    try {
+      const response = await this.openai.responses.create({
+        model,
+        input: refinementPrompt,
+      });
+      const output = response.output_text?.trim();
+      if (!output) {
+        return actionItems;
+      }
+
+      const parsed = JSON.parse(output) as { actionItems?: unknown };
+      if (
+        !Array.isArray(parsed.actionItems) ||
+        parsed.actionItems.length !== 3 ||
+        parsed.actionItems.some(
+          (item) => typeof item !== 'string' || !item.trim(),
+        )
+      ) {
+        return actionItems;
+      }
+
+      return parsed.actionItems.map((item) => item.trim());
+    } catch {
+      return actionItems;
+    }
   }
 }
