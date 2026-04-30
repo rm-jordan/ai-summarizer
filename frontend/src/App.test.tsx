@@ -1,8 +1,12 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
 describe('App', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('shows idle placeholder before submit', () => {
     render(<App />);
 
@@ -11,7 +15,7 @@ describe('App', () => {
     ).toBeInTheDocument();
   });
 
-  it('keeps submit disabled for empty input', async () => {
+  it('keeps submit disabled for empty input', () => {
     render(<App />);
 
     expect(screen.getByRole('button', { name: 'Summarize' })).toBeDisabled();
@@ -38,7 +42,60 @@ describe('App', () => {
     );
     expect(screen.getByText('First task')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(1);
-
-    fetchMock.mockRestore();
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/ai/summarize',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
   });
+
+  it('toggles to JSON view after a successful response', async () => {
+    vi.spyOn(window, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        summary: 'JSON toggle test summary.',
+        actionItems: ['Task one', 'Task two', 'Task three'],
+      }),
+    } as Response);
+
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Input text'), {
+      target: { value: 'Trigger a successful summarize request.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Summarize' }));
+
+    await waitFor(() =>
+      expect(screen.getByText('JSON toggle test summary.')).toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'JSON' }));
+
+    expect(screen.getByText('"summary"')).toBeInTheDocument();
+    expect(screen.getByText('"actionItems"')).toBeInTheDocument();
+    expect(screen.getByText('"Task one"')).toBeInTheDocument();
+  });
+
+  it('shows backend error message when request fails', async () => {
+    vi.spyOn(window, 'fetch').mockResolvedValue({
+      ok: false,
+      json: async () => ({
+        message: 'Backend validation failed.',
+      }),
+    } as Response);
+
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Input text'), {
+      target: { value: 'Trigger an error response.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Summarize' }));
+
+    await waitFor(() =>
+      expect(screen.getByText('Backend validation failed.')).toBeInTheDocument(),
+    );
+  });
+
 });
