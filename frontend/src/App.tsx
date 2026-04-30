@@ -10,6 +10,8 @@ interface SummaryResponse {
   actionItems: string[];
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
+
 function App() {
   const [text, setText] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('formatted');
@@ -31,23 +33,40 @@ function App() {
       return;
     }
 
-    // Step 1-3 only: this simulates request flow until API wiring.
     setStatus('loading');
     setError('');
     setResult(null);
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      const response = await fetch(`${API_BASE_URL}/ai/summarize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: text.trim() }),
+      });
 
-    setResult({
-      summary:
-        'Frontend scaffold complete. Next step is wiring this form to the backend endpoint.',
-      actionItems: [
-        'Connect POST /ai/summarize in an API client utility.',
-        'Handle backend success and error responses in UI state.',
-        'Keep this formatted and JSON view toggle for result display.',
-      ],
-    });
-    setStatus('success');
+      if (!response.ok) {
+        const errorPayload = (await response.json().catch(() => null)) as
+          | { message?: string | string[] }
+          | null;
+        const message = Array.isArray(errorPayload?.message)
+          ? errorPayload.message.join(', ')
+          : errorPayload?.message ?? 'Request failed. Please try again.';
+        throw new Error(message);
+      }
+
+      const payload = (await response.json()) as SummaryResponse;
+      setResult(payload);
+      setStatus('success');
+    } catch (submitError) {
+      const message =
+        submitError instanceof Error
+          ? submitError.message
+          : 'Unable to reach backend. Make sure the API is running.';
+      setError(message);
+      setStatus('error');
+    }
   };
 
   return (
