@@ -18,10 +18,16 @@ Small take-home project that accepts a block of text, uses an AI model to summar
 
 ## Tech stack
 
-- NestJS
-- TypeScript
-- OpenAI SDK
-- Jest
+- Backend:
+  - NestJS
+  - TypeScript
+  - OpenAI SDK
+  - Jest
+- Frontend:
+  - React (Vite)
+  - TypeScript
+  - Vitest
+  - Testing Library
 
 ## Project structure
 
@@ -30,17 +36,35 @@ Small take-home project that accepts a block of text, uses an AI model to summar
 - `backend/src/ai/dto/summarize-request.dto.ts` - request validation
 - `backend/src/ai/dto/summarize-response.dto.ts` - typed response contract
 - `backend/src/main.ts` - global validation pipe
+- `frontend/src/App.tsx` - input form, submit flow, result rendering, view toggle
+- `frontend/src/App.test.tsx` - frontend UI tests
+- `frontend/src/test/setup.ts` - test setup (`jest-dom`)
+- `frontend/.env.example` - frontend API base URL template
 
 ## Setup
 
-1. Install dependencies:
+1. Install backend dependencies:
 
 ```bash
 cd backend
 npm install
 ```
 
-2. Configure environment:
+2. Install frontend dependencies:
+
+```bash
+cd ../frontend
+npm install
+```
+
+3. Install root dependencies (for running both apps together):
+
+```bash
+cd ..
+npm install
+```
+
+4. Configure backend environment:
 
 ```bash
 cp .env.example .env
@@ -53,13 +77,29 @@ Set in `backend/.env`:
 
 ## Run
 
-From `backend/`:
+Run both frontend and backend together (from repo root):
 
 ```bash
+npm run dev
+```
+
+Run backend only:
+
+```bash
+cd backend
 npm run start
 ```
 
-Server default: `http://localhost:3000`
+Backend default: `http://localhost:3000`
+
+Run frontend only:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Frontend default: `http://localhost:5173`
 
 ## API usage
 
@@ -88,7 +128,7 @@ Successful response shape:
 
 ## Tests
 
-From `backend/`:
+Backend tests (from `backend/`):
 
 ```bash
 # unit tests
@@ -96,6 +136,12 @@ npm run test -- --runInBand --watchman=false
 
 # e2e tests
 npm run test:e2e -- --runInBand --watchman=false
+```
+
+Frontend tests (from `frontend/`):
+
+```bash
+npm run test
 ```
 
 ## Notes
