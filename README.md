@@ -29,16 +29,16 @@ Build a simple app/API that:
 - **React**: I used React for a simple, component-driven UI to collect input and render results in both formatted and JSON views.
 - **Vite**: I used Vite for fast local development and minimal setup overhead, which helped keep the project focused on functionality.
 
-## Prompt(s) Used
+## Use of AI and Prompting
 
 I used AI-assisted prompting to guide both the implementation and the model behavior, focusing on speed while maintaining control over the final structure.
 
-### Implementation-Oriented Prompts
+### AI-Assisted Development
 
 * Prompted the creation of a structured NestJS backend and implemented a `POST /ai/summarize` endpoint to handle input text.
 * Guided the setup of a minimal React + Vite frontend to provide a simple interface for interacting with the API.
-* Directed integration between the frontend and backend to enable end-to-end testing of the summarization flow.
-* Used prompts to help generate and refine tests, then executed them to validate functionality.
+* Integrated the frontend and backend to enable end-to-end testing of the summarization flow.
+* Generated and refined tests, then executed them to validate functionality.
 
 ### AI Task Prompts
 
@@ -53,6 +53,7 @@ Summarize the following text in 2–3 sentences.
 Then extract exactly 3 clear and actionable items.
 
 Return ONLY valid JSON in the following format:
+
 {
 "summary": string,
 "actionItems": string[]
@@ -67,6 +68,7 @@ Then extract exactly 3 clear and actionable items.
 Each action item should be a single focused task. Do not combine unrelated tasks into one action item.
 
 Return ONLY valid JSON in the following format:
+
 {
 "summary": string,
 "actionItems": string[]
