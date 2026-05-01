@@ -10,7 +10,7 @@ Build a simple app/API that:
   - 3 key action items
 - returns structured JSON output
 
-## What This Project Includes
+## What I Built
 
 - Backend API built with NestJS (`backend/`)
 - Frontend app built with React + Vite (`frontend/`)
